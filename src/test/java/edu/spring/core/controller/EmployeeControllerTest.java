@@ -30,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 Esta anotacion nos va a servir para poder probar los controlladores
  */
 @WebMvcTest
-public class EmployeeControlerTest {
+public class EmployeeControllerTest {
 
     @Autowired
     private MockMvc mockMvc;

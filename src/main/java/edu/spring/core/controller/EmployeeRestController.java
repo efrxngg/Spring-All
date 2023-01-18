@@ -58,7 +58,7 @@ public class EmployeeRestController {
     @DeleteMapping(value = "/{id}")
     public ResponseEntity<String> deleteEmployee(@PathVariable long id) {
         employeeService.deleteEmployeeById(id);
-        return status(HttpStatus.NO_CONTENT).body("Employee delete correctly");
+        return status(HttpStatus.OK).body("Employee delete correctly");
     }
 
 }
