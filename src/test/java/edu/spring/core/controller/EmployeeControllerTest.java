@@ -136,7 +136,7 @@ public class EmployeeControllerTest {
         willDoNothing().given(employeeService).deleteEmployeeById(id);
         var response = mockMvc.perform(delete("/api/v1/employees/{id}", id));
 
-        response.andExpect(status().isNoContent())
+        response.andExpect(status().isOk())
                 .andDo(print());
     }
 
