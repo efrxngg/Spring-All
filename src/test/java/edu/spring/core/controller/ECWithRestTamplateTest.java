@@ -1,10 +1,10 @@
 package edu.spring.core.controller;
 
 import edu.spring.core.entity.Employee;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -12,6 +12,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
 
 import java.util.Map;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -21,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
 Siempre que trabajes con TestRestTemplate o WebTestClient
 el proyecto principal debe estar activo para su correcto funcionamiento
  */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(OrderAnnotation.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class ECWithRestTamplateTest {
@@ -28,28 +30,29 @@ public class ECWithRestTamplateTest {
     @Autowired
     private TestRestTemplate restTemplate;
 
-    private Employee employee;
+    private final Employee employee = new Employee(
+            null,
+            "Test",
+            "Test",
+            null
+    );
 
-    private final String URL = "http://localhost:8080/api/v1/employees";
-
-    @BeforeEach
-    public void setup() {
-        employee = new Employee(
-                1L,
-                "Efren", "Galarza",
-                "efren@gmail.com"
-        );
-    }
+    private final String URL = "/api/v1/employees";
 
     @Test
     @Order(1)
     void testEndPointSaveEmployee() {
+        employee.setEmail("testresttemplate@%s.com".formatted(
+                UUID.randomUUID().toString().replaceAll("-", ""))
+        );
         ResponseEntity<Employee> response = restTemplate
                 .postForEntity(URL, employee, Employee.class);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals(MediaType.APPLICATION_JSON, response.getHeaders().getContentType());
-        assertNotNull(response.getBody());
+        var employeeAux = response.getBody();
+        assertNotNull(employeeAux);
+        employee.setId(employeeAux.getId());
     }
 
     @Test
@@ -66,7 +69,7 @@ public class ECWithRestTamplateTest {
     @Order(3)
     void testEndPointFindEmployeeById() {
         ResponseEntity<Employee> response = restTemplate
-                .getForEntity(URL.concat("/1"), Employee.class);
+                .getForEntity(URL.concat("/%s".formatted(employee.getId())), Employee.class);
         var employee = response.getBody();
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -77,7 +80,7 @@ public class ECWithRestTamplateTest {
     @Test
     @Order(4)
     void testEndPointUpdateEmployeeById() {
-        String name = "Gisell";
+        String name = "testresttemplate2";
         employee.setName(name);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -103,7 +106,7 @@ public class ECWithRestTamplateTest {
                 .exchange(URL.concat("/{id}"),
                         HttpMethod.DELETE, null,
                         String.class,
-                        Map.of("id", 1L));
+                        Map.of("id", employee.getId()));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertInstanceOf(String.class, response.getBody());
